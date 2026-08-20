@@ -2,93 +2,1090 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Saúde</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>HealthControl - Monitor de Saúde, Nutrição e Treinos</title>
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF5A73">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="HealthControl">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="container">
-    <h1>Controle de Saúde</h1>
-
-    <!-- Abas -->
-    <div class="abas">
-        <button class="aba-link" onclick="abrirAba(event, 'aba-alimentos')">Alimentos e Nutrientes</button>
-        <button class="aba-link" onclick="abrirAba(event, 'aba-sugestoes')">Gasto Calórico e Sugestões</button>
-    </div>
-
-    <!-- Aba 1: Alimentos e Nutrientes -->
-    <div id="aba-alimentos" class="aba-conteudo">
-        <section class="alimentos-section">
-            <!-- Coluna da Esquerda: Adicionar Alimento -->
-            <div class="coluna-esquerda">
-                <h2>Adicionar Alimento</h2>
-                <form id="form-alimento">
-                    <label for="nome">Nome:</label>
-                    <input type="text" id="nome" name="nome" required>
-
-                    <label for="calorias">Calorias:</label>
-                    <input type="number" id="calorias" name="calorias" required>
-
-                    <label for="proteinas">Proteínas (g):</label>
-                    <input type="number" step="0.1" id="proteinas" name="proteinas" required>
-
-                    <label for="carboidratos">Carboidratos (g):</label>
-                    <input type="number" step="0.1" id="carboidratos" name="carboidratos" required>
-
-                    <label for="gorduras">Gorduras (g):</label>
-                    <input type="number" step="0.1" id="gorduras" name="gorduras" required>
-
-                    <button type="submit">Adicionar Alimento</button>
-                </form>
-            </div>
-
-            <!-- Coluna da Direita: Listar Alimentos -->
-            <div class="coluna-direita">
-                <h2>Alimentos Cadastrados</h2>
-                <div id="lista-alimentos">
-                    <!-- Os alimentos serão carregados dinamicamente aqui -->
+    <!-- App Container Wrapper -->
+    <div class="app-wrapper">
+        <!-- Floating Hydration Toast Alert Banner -->
+        <div id="hydration-toast-banner" class="hydration-toast-banner" role="alert" aria-live="assertive">
+            <div class="toast-content-wrap">
+                <div class="toast-icon-bubble">💧</div>
+                <div class="toast-text-col">
+                    <h4 class="toast-title">Hora de se Hidratar!</h4>
+                    <p class="toast-desc">Beba <span id="toast-water-vol">250</span>ml de água para manter seu foco e saúde.</p>
                 </div>
             </div>
-        </section>
+            <div class="toast-actions-row">
+                <button type="button" class="btn-toast-drink" id="btn-toast-drink">💧 Bebi (+250ml)</button>
+                <button type="button" class="btn-toast-dismiss" id="btn-toast-dismiss" aria-label="Dispensar">&times;</button>
+            </div>
+        </div>
 
-        <!-- Seção de Calcular Totais -->
-        <section>
-            <h2>Totais Consumidos</h2>
-            <form id="form-calorias">
-                <button type="submit">Calcular Totais</button>
-            </form>
-            <p id="total-calorias"></p>
-            <p id="total-proteinas"></p>
-            <p id="total-carboidratos"></p>
-            <p id="total-gorduras"></p>
-        </section>
+        <!-- Main Mobile Frame -->
+        <main class="app-container" id="app-container">
+            
+            <!-- VIEW 1: HOME / DASHBOARD -->
+            <section id="view-dashboard" class="app-view active" aria-label="Dashboard Principal">
+                <!-- Top Status Bar & Greeting -->
+                <header class="dashboard-header">
+                    <div class="user-greeting" id="btn-open-profile" role="button" tabindex="0" title="Clique para gerenciar ou alternar perfis">
+                        <div class="avatar-wrapper">
+                            <div class="avatar-circle" id="user-avatar-display">
+                                <span>👩‍🦰</span>
+                            </div>
+                            <span class="avatar-edit-badge" title="Alternar perfil">👥</span>
+                        </div>
+                        <div class="greeting-text">
+                            <h1 class="greeting-title">Good morning <span id="greeting-user-name">Juliana</span> <span class="emoji-smile">🙃</span></h1>
+                            <p class="greeting-subtitle" id="greeting-status">Meta: 65kg • 168cm • 28 anos</p>
+                        </div>
+                    </div>
+                    <button class="icon-btn" id="btn-quick-notify" title="Alarme de Hidratação e Lembretes" aria-label="Alarme de Hidratação">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="notify-badge-dot active" id="notify-badge-dot" title="Lembrete de hidratação ativo"></span>
+                    </button>
+                </header>
+
+                <!-- Date Badge & Selector -->
+                <div class="date-badge-wrapper">
+                    <div class="date-badge" id="current-date-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span id="display-date-text">August 28 2026</span>
+                    </div>
+                </div>
+
+                <!-- 4 Pastel Metric Cards Grid -->
+                <div class="metrics-grid">
+                    
+                    <!-- Card 1: Water (Blue) -->
+                    <div class="metric-card card-water" id="card-metric-water">
+                        <div class="card-top">
+                            <span class="card-label">Water</span>
+                            <button class="card-mini-action" id="btn-quick-water" title="Adicionar 250ml de água" aria-label="Adicionar água">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="card-graphic water-graphic">
+                            <svg class="water-wave-svg" viewBox="0 0 160 60" preserveAspectRatio="none">
+                                <path class="water-wave-back" d="M 0 30 Q 40 15 80 30 T 160 30 L 160 60 L 0 60 Z" />
+                                <path class="water-wave-front" d="M 0 38 Q 40 50 80 38 T 160 38 L 160 60 L 0 60 Z" />
+                            </svg>
+                        </div>
+                        <div class="card-bottom">
+                            <h3 class="card-value" id="card-water-value">2100 ml</h3>
+                            <p class="card-subtext" id="card-water-goal">Daily goal 3.5L</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Weight (Yellow/Cream) -->
+                    <div class="metric-card card-weight" id="card-metric-weight" role="button" tabindex="0" title="Clique para atualizar seu peso">
+                        <div class="card-top">
+                            <span class="card-label">Weight</span>
+                            <span class="card-mini-icon">⚖️</span>
+                        </div>
+                        <div class="card-graphic gauge-graphic">
+                            <svg class="gauge-svg" viewBox="0 0 120 70">
+                                <path class="gauge-bg" d="M 15 60 A 45 45 0 0 1 105 60" fill="none" stroke="#F0E5D0" stroke-width="12" stroke-linecap="round" />
+                                <path class="gauge-progress" id="weight-gauge-arc" d="M 15 60 A 45 45 0 0 1 105 60" fill="none" stroke="url(#weight-gradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="142" stroke-dashoffset="40" />
+                                <defs>
+                                    <linearGradient id="weight-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#FFDD55" />
+                                        <stop offset="50%" stop-color="#FFA834" />
+                                        <stop offset="100%" stop-color="#FF4D4D" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="card-bottom">
+                            <h3 class="card-value" id="card-weight-value">75 kg</h3>
+                            <p class="card-subtext" id="card-weight-goal">Goal 65kg</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Calories (Mint Green) -->
+                    <div class="metric-card card-calories" id="card-metric-calories">
+                        <div class="card-top">
+                            <span class="card-label">Calories</span>
+                            <span class="card-flame">🔥</span>
+                        </div>
+                        <div class="card-graphic calories-graphic">
+                            <svg class="arc-svg" viewBox="0 0 120 70">
+                                <path class="arc-bg" d="M 20 60 A 40 40 0 0 1 100 60" fill="none" stroke="#D7EFE0" stroke-width="10" stroke-linecap="round" />
+                                <path class="arc-progress" id="calories-arc" d="M 20 60 A 40 40 0 0 1 100 60" fill="none" stroke="#48C774" stroke-width="10" stroke-linecap="round" stroke-dasharray="126" stroke-dashoffset="45" />
+                                <circle cx="60" cy="50" r="14" fill="#E2F5E8" />
+                                <text x="60" y="54" text-anchor="middle" font-size="12" fill="#2E9E52">🔥</text>
+                            </svg>
+                        </div>
+                        <div class="card-bottom">
+                            <h3 class="card-value" id="card-calories-value">750 kcal</h3>
+                            <p class="card-subtext" id="card-calories-left">Left 2500 kcal</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Exercício / Atividade Física -->
+                    <div class="metric-card card-exercise" id="card-metric-exercise" role="button" tabindex="0" title="Clique para registrar tempo de exercício e atividade">
+                        <div class="card-top">
+                            <span class="card-label">Exercício</span>
+                            <span class="card-exercise-icon">🏃‍♂️</span>
+                        </div>
+                        <div class="card-graphic exercise-graphic">
+                            <svg class="exercise-svg" viewBox="0 0 120 55">
+                                <rect x="10" y="24" width="100" height="12" rx="6" fill="#FCE4EC" />
+                                <rect id="exercise-bar-progress" x="10" y="24" width="75" height="12" rx="6" fill="url(#exercise-gradient)" />
+                                <circle id="exercise-pin" cx="85" cy="30" r="8" fill="#FF4D6D" stroke="#FFFFFF" stroke-width="2" />
+                                <defs>
+                                    <linearGradient id="exercise-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#FFA07A" />
+                                        <stop offset="100%" stop-color="#FF4D6D" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="card-bottom">
+                            <h3 class="card-value" id="card-exercise-value">45 min</h3>
+                            <p class="card-subtext" id="card-exercise-goal">Meta diária 60 min</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Today's Meal Section -->
+                <section class="todays-meal-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Today's meal <span class="meal-emoji">🌽</span></h2>
+                        <button class="link-btn" id="btn-goto-plan">
+                            New plan <span class="edit-icon">✏️</span>
+                        </button>
+                    </div>
+
+                    <div class="meals-list" id="dashboard-meals-container">
+                        <!-- Meal cards populated dynamically -->
+                    </div>
+                </section>
+            </section>
+
+
+            <!-- VIEW 2: ACTIVITIES / ANALYTICS & MACROS -->
+            <section id="view-activities" class="app-view" aria-label="Atividades e Nutrição">
+                <header class="view-header">
+                    <button class="nav-back-btn" data-target="view-dashboard" aria-label="Voltar para início">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <h1 class="view-title">Activities</h1>
+                    <div style="width: 24px;"></div>
+                </header>
+
+                <!-- Calorie Summary Pill -->
+                <div class="calorie-summary-badge">
+                    <div class="calorie-pill-highlight">
+                        <span id="act-total-calories-pill">582 Kcal</span>
+                    </div>
+                    <p class="activities-subinfo" id="act-foods-summary">
+                        August 28 • <span id="act-foods-count">3 Foods</span> • <span id="act-calories-remaining">49 Kcal remaining</span>
+                    </p>
+                </div>
+
+                <!-- Multi-Curve Interactive Smooth Chart -->
+                <div class="chart-container-card">
+                    <div class="chart-wrapper">
+                        <svg id="nutrition-curves-svg" viewBox="0 0 340 180" class="nutrition-svg-chart">
+                            <!-- Background Grid Lines -->
+                            <line x1="20" y1="30" x2="320" y2="30" stroke="#F1F3F6" stroke-dasharray="4" />
+                            <line x1="20" y1="75" x2="320" y2="75" stroke="#F1F3F6" stroke-dasharray="4" />
+                            <line x1="20" y1="120" x2="320" y2="120" stroke="#F1F3F6" stroke-dasharray="4" />
+                            <line x1="20" y1="165" x2="320" y2="165" stroke="#F1F3F6" />
+
+                            <!-- Gradients -->
+                            <defs>
+                                <linearGradient id="grad-calory" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#FFA07A" stop-opacity="0.35"/>
+                                    <stop offset="100%" stop-color="#FFA07A" stop-opacity="0.0"/>
+                                </linearGradient>
+                                <linearGradient id="grad-carbs" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#FF529A" stop-opacity="0.30"/>
+                                    <stop offset="100%" stop-color="#FF529A" stop-opacity="0.0"/>
+                                </linearGradient>
+                                <linearGradient id="grad-fat" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#845EF7" stop-opacity="0.30"/>
+                                    <stop offset="100%" stop-color="#845EF7" stop-opacity="0.0"/>
+                                </linearGradient>
+                                <linearGradient id="grad-protein" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#51CF66" stop-opacity="0.25"/>
+                                    <stop offset="100%" stop-color="#51CF66" stop-opacity="0.0"/>
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Area Paths -->
+                            <path id="path-area-calory" fill="url(#grad-calory)" d="" />
+                            <path id="path-area-carbs" fill="url(#grad-carbs)" d="" />
+                            <path id="path-area-fat" fill="url(#grad-fat)" d="" />
+                            <path id="path-area-protein" fill="url(#grad-protein)" d="" />
+
+                            <!-- Stroke Lines -->
+                            <path id="path-line-calory" fill="none" stroke="#FF7A59" stroke-width="3" stroke-linecap="round" d="" />
+                            <path id="path-line-carbs" fill="none" stroke="#E64980" stroke-width="3" stroke-linecap="round" d="" />
+                            <path id="path-line-fat" fill="none" stroke="#7048E8" stroke-width="3" stroke-linecap="round" d="" />
+                            <path id="path-line-protein" fill="none" stroke="#40C057" stroke-width="3" stroke-linecap="round" d="" />
+
+                            <!-- Interactive dots container -->
+                            <g id="chart-dots-group"></g>
+                        </svg>
+                    </div>
+
+                    <!-- Chart Legend -->
+                    <div class="chart-legend">
+                        <div class="legend-item"><span class="legend-dot dot-calory"></span> Calory</div>
+                        <div class="legend-item"><span class="legend-dot dot-carbs"></span> Carbs</div>
+                        <div class="legend-item"><span class="legend-dot dot-fat"></span> Fat</div>
+                        <div class="legend-item"><span class="legend-dot dot-protein"></span> Protein</div>
+                    </div>
+                </div>
+
+                <!-- 2x2 Nutrition Macro Cards -->
+                <div class="macros-grid">
+                    
+                    <!-- Calories Macro -->
+                    <div class="macro-card">
+                        <div class="macro-card-header">
+                            <span class="macro-name">Calories</span>
+                            <span class="macro-icon">🔥</span>
+                        </div>
+                        <h3 class="macro-pct" id="macro-pct-cal">90%</h3>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill fill-cal" id="bar-cal" style="width: 90%;"></div>
+                        </div>
+                        <span class="macro-detail" id="macro-detail-cal">1850 / 2000 kcal</span>
+                    </div>
+
+                    <!-- Carbs Macro -->
+                    <div class="macro-card">
+                        <div class="macro-card-header">
+                            <span class="macro-name">Carbs</span>
+                            <span class="macro-icon">🌾</span>
+                        </div>
+                        <h3 class="macro-pct" id="macro-pct-carbs">20%</h3>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill fill-carbs" id="bar-carbs" style="width: 20%;"></div>
+                        </div>
+                        <span class="macro-detail" id="macro-detail-carbs">45 / 220g</span>
+                    </div>
+
+                    <!-- Fat Macro -->
+                    <div class="macro-card">
+                        <div class="macro-card-header">
+                            <span class="macro-name">Fat</span>
+                            <span class="macro-icon">🧀</span>
+                        </div>
+                        <h3 class="macro-pct" id="macro-pct-fat">30%</h3>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill fill-fat" id="bar-fat" style="width: 30%;"></div>
+                        </div>
+                        <span class="macro-detail" id="macro-detail-fat">22 / 70g</span>
+                    </div>
+
+                    <!-- Protein Macro -->
+                    <div class="macro-card">
+                        <div class="macro-card-header">
+                            <span class="macro-name">Protein</span>
+                            <span class="macro-icon">🍗</span>
+                        </div>
+                        <h3 class="macro-pct" id="macro-pct-prot">42%</h3>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill fill-prot" id="bar-prot" style="width: 42%;"></div>
+                        </div>
+                        <span class="macro-detail" id="macro-detail-prot">65 / 150g</span>
+                    </div>
+
+                </div>
+
+                <!-- Water Tracker Cups Card -->
+                <div class="water-tracker-card">
+                    <div class="water-card-info">
+                        <div class="water-text-wrap">
+                            <span class="water-title">Water</span>
+                            <span class="water-sub" id="act-water-sub">2.5 L / 4 liter</span>
+                        </div>
+                        <button class="btn-add-water-cup" id="btn-add-cup-act" title="Adicionar copo de 250ml">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="water-glasses-row" id="water-glasses-container">
+                        <!-- Filled & empty glasses dynamically generated -->
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- VIEW 3: SET YOUR DAILY MEAL PLAN / FOODS -->
+            <section id="view-mealplan" class="app-view" aria-label="Planejador de Refeições">
+                <header class="view-header mealplan-header">
+                    <button class="nav-back-btn" data-target="view-dashboard" aria-label="Voltar para início">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <h1 class="view-title">Set your daily<br>meal plan</h1>
+                    <div class="mealplan-banner-ill">
+                        <div class="banner-emoji-bubble">🍉</div>
+                    </div>
+                </header>
+
+                <!-- Month Pills Selector -->
+                <div class="months-scroll-container">
+                    <div class="months-scroll" id="months-list">
+                        <span class="month-item" data-month="0">January</span>
+                        <span class="month-item" data-month="1">February</span>
+                        <span class="month-item" data-month="2">March</span>
+                        <span class="month-item" data-month="3">April</span>
+                        <span class="month-item" data-month="4">May</span>
+                        <span class="month-item" data-month="5">June</span>
+                        <span class="month-item" data-month="6">July</span>
+                        <span class="month-item active" data-month="7">August</span>
+                        <span class="month-item" data-month="8">September</span>
+                        <span class="month-item" data-month="9">October</span>
+                        <span class="month-item" data-month="10">November</span>
+                        <span class="month-item" data-month="11">December</span>
+                    </div>
+                </div>
+
+                <!-- Days of Week Carousel -->
+                <div class="days-carousel" id="days-carousel">
+                    <!-- Day chips generated dynamically -->
+                </div>
+
+                <!-- Daily Meal Slots Section -->
+                <div class="meal-slots-list" id="meal-slots-container">
+                    
+                    <!-- Breakfast Slot -->
+                    <div class="meal-slot-card" data-meal-type="breakfast">
+                        <div class="meal-slot-header">
+                            <div class="slot-title-wrap">
+                                <span class="slot-search-icon">🔍</span>
+                                <div>
+                                    <h3 class="slot-name">Breakfast</h3>
+                                    <p class="slot-summary" id="summary-breakfast">Tea, Bread & egg</p>
+                                </div>
+                            </div>
+                            <div class="slot-meta">
+                                <span class="slot-time">7-9:00 AM</span>
+                                <div class="slot-action-row">
+                                    <span class="slot-cal-badge" id="badge-cal-breakfast">🔥 205 kcal</span>
+                                    <button class="btn-slot-add" data-slot="breakfast" title="Adicionar alimento ao café da manhã">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slot-items-list" id="items-breakfast">
+                            <!-- Items populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Lunch Slot -->
+                    <div class="meal-slot-card" data-meal-type="lunch">
+                        <div class="meal-slot-header">
+                            <div class="slot-title-wrap">
+                                <span class="slot-search-icon">🥗</span>
+                                <div>
+                                    <h3 class="slot-name">Lunch</h3>
+                                    <p class="slot-summary" id="summary-lunch">Salmon, Mix veggies, Avocado</p>
+                                </div>
+                            </div>
+                            <div class="slot-meta">
+                                <span class="slot-time">12-2:00 PM</span>
+                                <div class="slot-action-row">
+                                    <span class="slot-cal-badge" id="badge-cal-lunch">🔥 525 kcal</span>
+                                    <button class="btn-slot-add" data-slot="lunch" title="Adicionar alimento ao almoço">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slot-items-list" id="items-lunch">
+                            <!-- Items populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Dinner Slot -->
+                    <div class="meal-slot-card" data-meal-type="dinner">
+                        <div class="meal-slot-header">
+                            <div class="slot-title-wrap">
+                                <span class="slot-search-icon">🥑</span>
+                                <div>
+                                    <h3 class="slot-name">Dinner</h3>
+                                    <p class="slot-summary" id="summary-dinner">Dates, Chicken pickle</p>
+                                </div>
+                            </div>
+                            <div class="slot-meta">
+                                <span class="slot-time">7-8:30 PM</span>
+                                <div class="slot-action-row">
+                                    <span class="slot-cal-badge" id="badge-cal-dinner">🔥 345 kcal</span>
+                                    <button class="btn-slot-add" data-slot="dinner" title="Adicionar alimento ao jantar">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slot-items-list" id="items-dinner">
+                            <!-- Items populated dynamically -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Custom Food Button -->
+                <div class="create-food-action-row">
+                    <button class="btn-primary-pill" id="btn-open-create-food">
+                        <span>+</span> Cadastrar Novo Alimento
+                    </button>
+                </div>
+
+            </section>
+
+
+            <!-- VIEW 4: WORKOUTS & ROTINAS DE TREINO (NOVA ABA) -->
+            <section id="view-workouts" class="app-view" aria-label="Rotinas de Treino">
+                <header class="view-header workout-header">
+                    <button class="nav-back-btn" data-target="view-dashboard" aria-label="Voltar para início">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="view-title">Rotinas de Treino</h1>
+                        <p class="view-subtitle-small">Exercícios guiados com ilustrações</p>
+                    </div>
+                    <button class="btn-mini-add-routine" id="btn-open-new-routine" title="Criar nova rotina personalizada">+</button>
+                </header>
+
+                <!-- Muscle Group Category Filter Chips -->
+                <div class="workout-filter-scroll">
+                    <button class="filter-chip active" data-filter="all">🔥 Todos</button>
+                    <button class="filter-chip" data-filter="peito">Peito</button>
+                    <button class="filter-chip" data-filter="costas">Costas</button>
+                    <button class="filter-chip" data-filter="pernas">Pernas</button>
+                    <button class="filter-chip" data-filter="bracos">Braços</button>
+                    <button class="filter-chip" data-filter="ombros">Ombros</button>
+                    <button class="filter-chip" data-filter="core">Abdômen</button>
+                    <button class="filter-chip" data-filter="cardio">Cardio/HIIT</button>
+                </div>
+
+                <!-- Active Workout Routine Highlight Banner -->
+                <div class="active-routine-card" id="active-routine-banner">
+                    <div class="routine-banner-left">
+                        <span class="routine-badge-tag">Treino Recomendado Hoje</span>
+                        <h3 class="routine-banner-title" id="banner-routine-name">Treino A: Peitoral & Tríceps</h3>
+                        <p class="routine-banner-meta" id="banner-routine-meta">4 Exercícios • ~45 min • ~380 kcal</p>
+                    </div>
+                    <button class="btn-start-workout" id="btn-start-banner-workout">
+                        <span>▶</span> Iniciar
+                    </button>
+                </div>
+
+                <!-- Section: Saved / Pre-built Routines -->
+                <div class="workout-section-block">
+                    <div class="section-header">
+                        <h2 class="section-title">Suas Rotinas <span class="meal-emoji">📋</span></h2>
+                        <button class="link-btn" id="btn-create-routine-link">+ Nova Rotina</button>
+                    </div>
+                    <div class="routines-grid" id="routines-list-container">
+                        <!-- Routines cards populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Section: Visual Exercise Library with Animations/Illustrations -->
+                <div class="workout-section-block">
+                    <div class="section-header">
+                        <h2 class="section-title">Biblioteca de Exercícios <span class="meal-emoji">🏋️‍♂️</span></h2>
+                        <span class="badge-count" id="exercise-count-badge">12 exercícios</span>
+                    </div>
+                    <div class="exercises-cards-grid" id="exercises-library-container">
+                        <!-- Exercise cards with animated SVG illustrations populated dynamically -->
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- VIEW 5: SUGGESTIONS & GOALS (Gasto Calórico & Dietas) -->
+            <section id="view-suggestions" class="app-view" aria-label="Sugestões e Metas">
+                <header class="view-header">
+                    <button class="nav-back-btn" data-target="view-dashboard" aria-label="Voltar para início">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <h1 class="view-title">Goals & Diet</h1>
+                    <div style="width: 24px;"></div>
+                </header>
+
+                <!-- Caloric Balance Card -->
+                <div class="balance-summary-card">
+                    <div class="balance-header">
+                        <span class="balance-title">Balanço Calórico Diário</span>
+                        <span class="balance-badge" id="badge-balance-status">Equilibrado</span>
+                    </div>
+                    <div class="balance-stats-row">
+                        <div class="stat-col">
+                            <span class="stat-val" id="stat-consumed-kcal">1075</span>
+                            <span class="stat-lbl">Consumidas</span>
+                        </div>
+                        <div class="stat-divider">-</div>
+                        <div class="stat-col">
+                            <span class="stat-val" id="stat-expenditure-kcal">2000</span>
+                            <span class="stat-lbl">Gasto Médio</span>
+                        </div>
+                        <div class="stat-divider">=</div>
+                        <div class="stat-col">
+                            <span class="stat-val" id="stat-diff-kcal">-925</span>
+                            <span class="stat-lbl">Balanço</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goal Settings Card -->
+                <div class="settings-card">
+                    <h3 class="card-section-title">Seu Objetivo</h3>
+                    <div class="goal-pills-selector" id="goal-pills">
+                        <button class="goal-pill active" data-goal="perda_peso">Perda de Peso</button>
+                        <button class="goal-pill" data-goal="ganho_massa">Ganho de Massa</button>
+                        <button class="goal-pill" data-goal="manutencao">Manutenção</button>
+                    </div>
+
+                    <form id="form-goals" class="goals-form">
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="input-gasto-calorico">Gasto Calórico (kcal/dia):</label>
+                                <input type="number" id="input-gasto-calorico" value="2000" min="500" max="6000" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-peso-meta">Meta de Peso (kg):</label>
+                                <input type="number" id="input-peso-meta" value="65" min="30" max="250" step="0.5" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-secondary-save">Salvar Metas</button>
+                    </form>
+                </div>
+
+                <!-- Smart AI Diet & Workout Suggestion -->
+                <div class="suggestion-section">
+                    <div class="suggestion-header-row">
+                        <h3 class="card-section-title">Sugestão Personalizada</h3>
+                        <button class="btn-refresh-suggestion" id="btn-refresh-suggestion" title="Gerar outra sugestão">
+                            🔄 Nova Sugestão
+                        </button>
+                    </div>
+
+                    <div class="suggestion-cards-wrap" id="suggestion-cards-container">
+                        <!-- Dieta Sugerida Card -->
+                        <div class="suggest-card diet-card">
+                            <div class="suggest-card-top">
+                                <span class="suggest-tag">🥗 Dieta Recomendada</span>
+                            </div>
+                            <h4 class="suggest-name" id="sug-diet-name">Dieta Low Carb</h4>
+                            <p class="suggest-desc" id="sug-diet-desc">Reduza a ingestão de carboidratos e aumente a ingestão de proteínas e gorduras boas.</p>
+                        </div>
+
+                        <!-- Exercício Sugerido Card -->
+                        <div class="suggest-card exercise-card">
+                            <div class="suggest-card-top">
+                                <span class="suggest-tag">🏃‍♂️ Exercício Recomendado</span>
+                                <span class="burn-badge" id="sug-burn-badge">🔥 Queima 600 kcal</span>
+                            </div>
+                            <h4 class="suggest-name" id="sug-exercise-name">Corrida</h4>
+                            <p class="suggest-desc">Pratique corrida moderada para elevar o gasto calórico e atingir seu déficit diário.</p>
+                        </div>
+
+                        <!-- Dynamic Advice Alert -->
+                        <div class="advice-card" id="sug-advice-box">
+                            <span class="advice-icon">💡</span>
+                            <p id="sug-advice-text">Você está consumindo calorias de forma equilibrada para o seu objetivo!</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+
+        <!-- Floating Pill Bottom Navigation Bar (5 Tabs) -->
+        <nav class="floating-nav" aria-label="Navegação Principal">
+            <!-- 1. Dashboard / Visão Geral -->
+            <button class="nav-item active" data-view="view-dashboard" aria-label="Dashboard Principal" title="Início / Dashboard">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+                    <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+                </svg>
+            </button>
+
+            <!-- 2. Atividades, Nutrição e Gráfico de Macros -->
+            <button class="nav-item" data-view="view-activities" aria-label="Atividades e Nutrição" title="Atividades & Macros">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+            </button>
+
+            <!-- 3. Plano Diário de Refeições (Garfo e Faca / Alimentos) -->
+            <button class="nav-item" data-view="view-mealplan" aria-label="Plano de Refeições" title="Plano de Refeições">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 2v20M2 2v7a4 4 0 0 0 4 4v9M2 2h6M5 2v9M22 2v20a3 3 0 0 0-3-3V2z"></path>
+                </svg>
+            </button>
+
+            <!-- 4. Treinos e Exercícios (Haltere / Musculação) -->
+            <button class="nav-item" data-view="view-workouts" aria-label="Treinos e Rotinas" title="Treinos & Exercícios">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 4v16M18 4v16M2 8v8M22 8v8M6 12h12M2 12h4M18 12h4"></path>
+                </svg>
+            </button>
+
+            <!-- 5. Metas e Balanço Calórico (Alvo / Target de Metas) -->
+            <button class="nav-item" data-view="view-suggestions" aria-label="Metas e Sugestões" title="Metas & Sugestões">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <circle cx="12" cy="12" r="6"></circle>
+                    <circle cx="12" cy="12" r="2"></circle>
+                </svg>
+            </button>
+        </nav>
     </div>
 
-    <!-- Aba 2: Gasto Calórico e Sugestões -->
-    <div id="aba-sugestoes" class="aba-conteudo" style="display: none;">
-        <section>
-            <h2>Gasto Calórico Médio</h2>
-            <form id="form-gasto-calorico">
-                <label for="gasto-calorico">Gasto Calórico Médio (kcal/dia):</label>
-                <input type="number" id="gasto-calorico" name="gasto-calorico" required>
-                <button type="submit">Salvar Gasto Calórico</button>
-            </form>
-        </section>
+    <!-- MODAL: PROFILE MANAGEMENT & PROFILE SWITCHER -->
+    <div class="modal-backdrop" id="modal-profile-manager" aria-hidden="true" role="dialog">
+        <div class="modal-card profile-modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Gerenciar Perfis</h3>
+                <button class="modal-close-btn" id="btn-close-profile-modal" aria-label="Fechar">&times;</button>
+            </div>
+            
+            <div class="profiles-section">
+                <label class="section-micro-lbl">Perfis Cadastrados</label>
+                <div class="profiles-list" id="profiles-list-container">
+                    <!-- List of profiles rendered dynamically -->
+                </div>
+            </div>
 
-        <section>
-            <h2>Sugerir Dieta e Exercício</h2>
-            <label for="objetivo">Selecione seu objetivo:</label>
-            <select id="objetivo">
-                <option value="perda_peso">Perda de Peso</option>
-                <option value="ganho_massa">Ganho de Massa</option>
-                <option value="manutencao">Manutenção</option>
-            </select>
-            <button id="btn-sugerir">Sugerir Dieta e Exercício</button>
-            <div id="sugestao"></div>
-        </section>
+            <div class="profile-form-wrap">
+                <div class="form-header-toggle">
+                    <h4 class="form-subheading" id="profile-form-title">Cadastrar Novo Perfil</h4>
+                    <button class="btn-link-reset-form" id="btn-toggle-new-profile">+ Novo Perfil</button>
+                </div>
+
+                <form id="form-profile-editor" class="create-food-form">
+                    <input type="hidden" id="profile-edit-id" value="">
+                    
+                    <div class="form-group">
+                        <label for="profile-name">Nome do Usuário:</label>
+                        <input type="text" id="profile-name" placeholder="Ex: Juliana Santos" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Escolha o Avatar:</label>
+                        <div class="avatar-picker-row" id="avatar-picker">
+                            <button type="button" class="avatar-opt active" data-emoji="👩‍🦰">👩‍🦰</button>
+                            <button type="button" class="avatar-opt" data-emoji="👨‍🦱">👨‍🦱</button>
+                            <button type="button" class="avatar-opt" data-emoji="👱‍♀️">👱‍♀️</button>
+                            <button type="button" class="avatar-opt" data-emoji="🧔">🧔</button>
+                            <button type="button" class="avatar-opt" data-emoji="🧑">🧑</button>
+                            <button type="button" class="avatar-opt" data-emoji="🏋️‍♀️">🏋️‍♀️</button>
+                            <button type="button" class="avatar-opt" data-emoji="🏃‍♂️">🏃‍♂️</button>
+                            <button type="button" class="avatar-opt" data-emoji="🥑">🥑</button>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="profile-age">Idade (anos):</label>
+                            <input type="number" id="profile-age" placeholder="Ex: 28" min="10" max="120" value="28" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-height">Altura (cm):</label>
+                            <input type="number" id="profile-height" placeholder="Ex: 168" min="80" max="250" value="168" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="profile-weight">Peso Atual (kg):</label>
+                            <input type="number" id="profile-weight" placeholder="Ex: 75.0" step="0.1" min="30" max="250" value="75.0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-weight-goal">Meta de Peso (kg):</label>
+                            <input type="number" id="profile-weight-goal" placeholder="Ex: 65.0" step="0.1" min="30" max="250" value="65.0" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="profile-cal-exp">Gasto Calórico (kcal):</label>
+                            <input type="number" id="profile-cal-exp" placeholder="Ex: 2000" min="500" max="6000" value="2000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-water-goal">Meta de Água (ml):</label>
+                            <input type="number" id="profile-water-goal" placeholder="Ex: 3500" min="500" max="10000" step="100" value="3500" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary-pill full-width" id="btn-save-profile">Salvar Perfil</button>
+                </form>
+            </div>
+        </div>
     </div>
-</div>
 
-<script src="script.js"></script>
+    <!-- MODAL: ADD FOOD TO MEAL / SEARCH DATABASE -->
+    <div class="modal-backdrop" id="modal-add-food" aria-hidden="true" role="dialog">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-slot-title">Adicionar ao Café da Manhã</h3>
+                <button class="modal-close-btn" id="btn-close-food-modal" aria-label="Fechar">&times;</button>
+            </div>
+            
+            <div class="modal-search-wrap">
+                <input type="text" id="input-search-foods" class="search-input" placeholder="🔍 Buscar alimento...">
+            </div>
+
+            <div class="quick-food-list" id="modal-quick-foods">
+                <!-- Quick selectable foods list -->
+            </div>
+
+            <div class="modal-footer-action">
+                <button class="btn-link-create" id="btn-modal-to-create">+ Criar alimento customizado</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATE CUSTOM FOOD -->
+    <div class="modal-backdrop" id="modal-create-food" aria-hidden="true" role="dialog">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Novo Alimento</h3>
+                <button class="modal-close-btn" id="btn-close-create-modal" aria-label="Fechar">&times;</button>
+            </div>
+            
+            <form id="form-create-alimento" class="create-food-form">
+                <div class="form-group">
+                    <label for="food-name">Nome do Alimento:</label>
+                    <input type="text" id="food-name" placeholder="Ex: Ovos Mexidos com Queijo" required>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="food-cal">Calorias (kcal):</label>
+                        <input type="number" id="food-cal" placeholder="Ex: 180" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="food-prot">Proteínas (g):</label>
+                        <input type="number" id="food-prot" placeholder="Ex: 14" step="0.1" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="food-carbs">Carboidratos (g):</label>
+                        <input type="number" id="food-carbs" placeholder="Ex: 2" step="0.1" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="food-fat">Gorduras (g):</label>
+                        <input type="number" id="food-fat" placeholder="Ex: 12" step="0.1" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="food-meal-target">Adicionar à Refeição:</label>
+                    <select id="food-meal-target">
+                        <option value="breakfast">Café da Manhã (Breakfast)</option>
+                        <option value="lunch">Almoço (Lunch)</option>
+                        <option value="dinner">Jantar (Dinner)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary-pill full-width">Salvar e Adicionar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: UPDATE WEIGHT -->
+    <div class="modal-backdrop" id="modal-update-metric" aria-hidden="true" role="dialog">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-metric-title">Atualizar Registro</h3>
+                <button class="modal-close-btn" id="btn-close-metric-modal" aria-label="Fechar">&times;</button>
+            </div>
+            
+            <form id="form-update-metric" class="create-food-form">
+                <div class="form-group">
+                    <label id="label-metric-input" for="input-metric-val">Novo Valor:</label>
+                    <input type="number" id="input-metric-val" step="0.1" required>
+                </div>
+                <button type="submit" class="btn-primary-pill full-width">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTER EXERCISE / QUICK WORKOUT -->
+    <div class="modal-backdrop" id="modal-update-exercise" aria-hidden="true" role="dialog">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Registrar Atividade Física</h3>
+                <button class="modal-close-btn" id="btn-close-exercise-modal" aria-label="Fechar">&times;</button>
+            </div>
+            
+            <form id="form-register-exercise" class="create-food-form">
+                <div class="form-group">
+                    <label for="exercise-type">Tipo de Atividade:</label>
+                    <select id="exercise-type">
+                        <option value="Corrida">🏃‍♂️ Corrida / Trote</option>
+                        <option value="Musculação">🏋️‍♀️ Treino de Musculação</option>
+                        <option value="Caminhada">🚶‍♂️ Caminhada ao ar livre</option>
+                        <option value="Ciclismo">🚴‍♂️ Ciclismo</option>
+                        <option value="HIIT">⚡ Treino HIIT / Funcional</option>
+                        <option value="Yoga">🧘‍♀️ Yoga / Alongamento</option>
+                        <option value="Natação">🏊‍♂️ Natação</option>
+                    </select>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="exercise-minutes">Duração (minutos):</label>
+                        <input type="number" id="exercise-minutes" value="45" min="5" max="360" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="exercise-daily-goal">Meta Diária (min):</label>
+                        <input type="number" id="exercise-daily-goal" value="60" min="10" max="360" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary-pill full-width">Registrar Atividade</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATE CUSTOM WORKOUT ROUTINE -->
+    <div class="modal-backdrop" id="modal-create-routine" aria-hidden="true" role="dialog">
+        <div class="modal-card routine-builder-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Criar Rotina de Treino</h3>
+                <button class="modal-close-btn" id="btn-close-routine-modal" aria-label="Fechar">&times;</button>
+            </div>
+            
+            <form id="form-create-routine" class="create-food-form">
+                <div class="form-group">
+                    <label for="routine-name">Nome da Rotina:</label>
+                    <input type="text" id="routine-name" placeholder="Ex: Treino A - Peito e Tríceps" required>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="routine-day">Dia Sugerido:</label>
+                        <select id="routine-day">
+                            <option value="Segunda-feira">Segunda-feira</option>
+                            <option value="Terça-feira">Terça-feira</option>
+                            <option value="Quarta-feira">Quarta-feira</option>
+                            <option value="Quinta-feira">Quinta-feira</option>
+                            <option value="Sexta-feira">Sexta-feira</option>
+                            <option value="Sábado">Sábado</option>
+                            <option value="Domingo">Domingo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="routine-focus">Foco Principal:</label>
+                        <select id="routine-focus">
+                            <option value="Hipertrofia">Hipertrofia</option>
+                            <option value="Força">Força</option>
+                            <option value="Queima de Gordura">Queima de Gordura</option>
+                            <option value="Resistência">Resistência</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Selecione os Exercícios:</label>
+                    <div class="routine-exercise-picker" id="routine-exercise-picker-list">
+                        <!-- Selectable exercises with checkboxes & sets config -->
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary-pill full-width">Salvar Rotina</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: WORKOUT PLAYER / EXECUÇÃO DO TREINO -->
+    <div class="modal-backdrop" id="modal-workout-player" aria-hidden="true" role="dialog">
+        <div class="modal-card workout-player-modal-card">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" id="player-routine-title">Treino A: Peitoral & Tríceps</h3>
+                    <p class="player-subtitle" id="player-routine-subtitle">4 exercícios programados</p>
+                </div>
+                <button class="modal-close-btn" id="btn-close-player-modal" aria-label="Fechar">&times;</button>
+            </div>
+            
+            <!-- Rest Timer Widget -->
+            <div class="rest-timer-widget">
+                <div class="timer-display-wrap">
+                    <span class="timer-label">Cronômetro de Descanso</span>
+                    <span class="timer-clock" id="player-timer-clock">00:45</span>
+                </div>
+                <div class="timer-btns-row">
+                    <button type="button" class="btn-timer-preset" data-seconds="30">+30s</button>
+                    <button type="button" class="btn-timer-preset active" data-seconds="45">45s</button>
+                    <button type="button" class="btn-timer-preset" data-seconds="60">60s</button>
+                    <button type="button" class="btn-timer-preset" data-seconds="90">90s</button>
+                    <button type="button" class="btn-timer-toggle" id="btn-toggle-rest-timer">▶ Iniciar</button>
+                </div>
+            </div>
+
+            <!-- Exercises list in player mode with animated illustrations & sets check -->
+            <div class="player-exercises-list" id="player-exercises-container">
+                <!-- Exercises rendered dynamically -->
+            </div>
+
+            <div class="player-footer-actions">
+                <button type="button" class="btn-primary-pill full-width" id="btn-finish-workout">
+                    🎉 Concluir Treino e Salvar Atividade
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EXERCISE DETAIL & INSTRUCTIONS -->
+    <div class="modal-backdrop" id="modal-exercise-detail" aria-hidden="true" role="dialog">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" id="detail-exercise-title">Supino Reto</h3>
+                <button class="modal-close-btn" id="btn-close-detail-modal" aria-label="Fechar">&times;</button>
+            </div>
+            
+            <div class="exercise-detail-body" id="exercise-detail-body">
+                <!-- Detailed illustration & instructions rendered dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: HYDRATION ALARM & WATER REMINDERS (NOVA FUNCIONALIDADE) -->
+    <div class="modal-backdrop" id="modal-hydration-alarm" aria-hidden="true" role="dialog">
+        <div class="modal-card hydration-modal-card">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title">Alarme de Hidratação 💧</h3>
+                    <p class="player-subtitle">Lembretes automáticos para beber água</p>
+                </div>
+                <button class="modal-close-btn" id="btn-close-alarm-modal" aria-label="Fechar">&times;</button>
+            </div>
+            
+            <!-- Live Countdown Status Card -->
+            <div class="alarm-live-card">
+                <div class="alarm-live-top">
+                    <div class="alarm-status-pill active" id="alarm-status-indicator">
+                        <span class="status-dot"></span>
+                        <span id="alarm-status-text">Lembrete Ativo</span>
+                    </div>
+                    <span class="alarm-water-icon">⏱️</span>
+                </div>
+                <div class="alarm-clock-display">
+                    <span class="alarm-clock-time" id="alarm-countdown-clock">00:45:00</span>
+                    <span class="alarm-clock-label">Tempo restante para o próximo copo de água</span>
+                </div>
+                <button type="button" class="btn-drink-now" id="btn-quick-drink-alarm">
+                    <span>💧</span> Beber Água Agora (<span id="alarm-quick-vol">250</span>ml)
+                </button>
+            </div>
+
+            <!-- Settings Form -->
+            <form id="form-hydration-alarm" class="create-food-form">
+                
+                <!-- Toggle Switch -->
+                <div class="setting-toggle-row">
+                    <div class="toggle-info">
+                        <strong class="toggle-title">Ativar Lembretes Automáticos</strong>
+                        <span class="toggle-desc">Notificar com som suave e aviso em tela</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-alarm-enabled" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <!-- Interval Selection Chips -->
+                <div class="form-group">
+                    <label>Intervalo entre Lembretes:</label>
+                    <div class="interval-chips-row" id="interval-chips-group">
+                        <button type="button" class="interval-chip" data-mins="30">30 min</button>
+                        <button type="button" class="interval-chip" data-mins="45">45 min</button>
+                        <button type="button" class="interval-chip active" data-mins="60">1 hora</button>
+                        <button type="button" class="interval-chip" data-mins="90">1h 30m</button>
+                        <button type="button" class="interval-chip" data-mins="120">2 horas</button>
+                    </div>
+                    <input type="hidden" id="input-alarm-interval" value="60">
+                </div>
+
+                <!-- Water Volume per reminder -->
+                <div class="form-group">
+                    <label>Quantidade por Lembrete:</label>
+                    <div class="volume-chips-row" id="volume-chips-group">
+                        <button type="button" class="volume-chip" data-vol="150">150 ml</button>
+                        <button type="button" class="volume-chip" data-vol="200">200 ml</button>
+                        <button type="button" class="volume-chip active" data-vol="250">250 ml (1 copo)</button>
+                        <button type="button" class="volume-chip" data-vol="350">350 ml</button>
+                        <button type="button" class="volume-chip" data-vol="500">500 ml (garrafa)</button>
+                    </div>
+                    <input type="hidden" id="input-alarm-volume" value="250">
+                </div>
+
+                <!-- Active hours window -->
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="alarm-start-time">Início (Horário):</label>
+                        <input type="time" id="alarm-start-time" value="08:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="alarm-end-time">Término (Horário):</label>
+                        <input type="time" id="alarm-end-time" value="22:00" required>
+                    </div>
+                </div>
+
+                <div class="alarm-buttons-row">
+                    <button type="button" class="btn-test-sound" id="btn-test-alarm-sound">
+                        🔔 Testar Alarme & Som
+                    </button>
+                    <button type="submit" class="btn-primary-pill flex-1">
+                        Salvar Preferências
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
